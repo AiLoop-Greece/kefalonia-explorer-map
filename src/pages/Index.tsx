@@ -2,7 +2,7 @@
 import React from "react";
 import KefaloniaMap from "@/components/KefaloniaMap";
 import { Card, CardContent } from "@/components/ui/card";
-import { Beach, MapPin } from "lucide-react";
+import { Waves, MapPin } from "lucide-react";
 
 const Index = () => {
   return (
@@ -36,7 +36,7 @@ const Index = () => {
             <CardContent className="p-6">
               <div className="flex items-center gap-3 mb-4">
                 <div className="bg-kefalonia-secondary p-2 rounded-full">
-                  <Beach className="h-5 w-5 text-white" />
+                  <Waves className="h-5 w-5 text-white" />
                 </div>
                 <h2 className="text-xl font-bold">How To Use</h2>
               </div>
