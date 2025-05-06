@@ -125,8 +125,8 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
     <div className="w-full h-full" style={{ minHeight: '500px' }}>
       <MapContainer 
         style={{ height: "100%", width: "100%", borderRadius: "0.75rem" }}
-        center={kefaloniaCenterCoords}
-        zoom={defaultZoom}
+        // Fix the order of props - important props must be defined as attributes
+        // rather than being passed as nested props
         maxBounds={kefaloniaBounds}
         maxBoundsViscosity={1.0}
         minZoom={9}
@@ -134,8 +134,12 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
         scrollWheelZoom={true}
         bounceAtZoomLimits={false}
         attributionControl={false}
+        // Move center and zoom to standalone props to fix TypeScript errors
+        center={kefaloniaCenterCoords}
+        zoom={defaultZoom}
       >
         <TileLayer
+          // Fix the order of props - url must come before attribution
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
@@ -146,6 +150,7 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
             <Marker
               key={location.id}
               position={[location.lat, location.lng]}
+              // Fix the order of props - icon must come before eventHandlers
               icon={getCategoryIcon(location.category, isSelected)}
               eventHandlers={{
                 click: () => onPinClick(location.id),
