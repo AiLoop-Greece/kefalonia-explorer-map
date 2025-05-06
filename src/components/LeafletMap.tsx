@@ -121,8 +121,8 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
     location => activeCategories.includes(location.category)
   );
 
-  // Create a MapContainer reference to access the map instance
-  const whenCreated = (mapInstance: L.Map) => {
+  // Setup function for when map is created
+  const handleMapCreated = (mapInstance: L.Map) => {
     // Apply bounds and restrictions to the map
     mapInstance.setMaxBounds(kefaloniaBounds);
     mapInstance.setMinZoom(9);
@@ -134,17 +134,12 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
     <div className="w-full h-full" style={{ minHeight: '500px' }}>
       <MapContainer 
         style={{ height: "100%", width: "100%", borderRadius: "0.75rem" }}
-        center={kefaloniaCenterCoords}
-        zoom={defaultZoom}
+        whenCreated={handleMapCreated}
         scrollWheelZoom={true}
         attributionControl={false}
-        whenCreated={whenCreated}
-        bounds={kefaloniaBounds}
       >
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        />
+        {/* Initialize the map view to the center position */}
+        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         
         {filteredLocations.map(location => {
           const isSelected = location.id === selectedPinId;
@@ -152,7 +147,6 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
             <Marker
               key={location.id}
               position={[location.lat, location.lng]}
-              icon={getCategoryIcon(location.category, isSelected)}
               eventHandlers={{
                 click: () => onPinClick(location.id),
                 mouseover: (e) => {
