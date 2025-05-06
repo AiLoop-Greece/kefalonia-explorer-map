@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from 'react';
 import { 
   MapContainer, 
@@ -29,6 +28,8 @@ export interface MapConfigProps {
   showAttribution?: boolean;
   showZoomControl?: boolean;
   showResetView?: boolean;
+  showCategories?: boolean;
+  showLogo?: boolean;
   mapStyle?: 'default' | 'satellite' | 'terrain';
   pinStyle?: 'modern' | 'classic';
 }
@@ -133,6 +134,8 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
     showAttribution = true,
     showZoomControl = true,
     showResetView = true,
+    showCategories = true,
+    showLogo = true,
     mapStyle = "default",
     pinStyle = "modern"
   } = config;

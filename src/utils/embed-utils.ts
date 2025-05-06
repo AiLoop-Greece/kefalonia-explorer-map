@@ -1,15 +1,6 @@
+import { MapConfigProps } from '../components/LeafletMap';
 
-export interface MapEmbedConfig {
-  height?: string;
-  width?: string;
-  showAttribution?: boolean;
-  showZoomControl?: boolean;
-  showResetView?: boolean;
-  showCategories?: boolean;
-  showLogo?: boolean;
-  mapStyle?: 'default' | 'satellite' | 'terrain';
-  pinStyle?: 'modern' | 'classic';
-}
+export type MapEmbedConfig = MapConfigProps;
 
 export const generateEmbedCode = (config: MapEmbedConfig = {}) => {
   // Convert config to query parameters
