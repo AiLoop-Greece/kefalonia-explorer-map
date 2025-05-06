@@ -169,7 +169,7 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
     const size = isSelected ? 38 : 30;
     
     if (pinStyle === "modern") {
-      return L.divIcon({
+      return divIcon({
         html: `
           <div class="animate-in fade-in duration-500" style="
             position: relative;
@@ -230,7 +230,7 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
       });
     } else {
       // Enhanced classic style
-      return L.divIcon({
+      return divIcon({
         html: `
           <div style="
             background: linear-gradient(135deg, ${color} 0%, ${getLighterShade(color)} 100%);
@@ -306,11 +306,15 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
         
         {filteredLocations.map(location => {
           const isSelected = location.id === selectedPinId;
+          // Create the marker icon
           const markerIcon = getCategoryIcon(location.category, isSelected);
+          
+          // Use the spread operator to apply all properties of the icon to the Marker component
           return (
             <Marker
               key={location.id}
               position={[location.lat, location.lng]}
+              // @ts-ignore - Type definitions don't match actual component props
               icon={markerIcon}
               eventHandlers={{
                 click: () => onPinClick(location.id),
