@@ -121,25 +121,27 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
     location => activeCategories.includes(location.category)
   );
 
+  // Create a MapContainer reference to access the map instance
+  const whenCreated = (mapInstance: L.Map) => {
+    // Apply bounds and restrictions to the map
+    mapInstance.setMaxBounds(kefaloniaBounds);
+    mapInstance.setMinZoom(9);
+    mapInstance.setMaxZoom(15);
+    mapInstance.options.bounceAtZoomLimits = false;
+  };
+
   return (
     <div className="w-full h-full" style={{ minHeight: '500px' }}>
       <MapContainer 
         style={{ height: "100%", width: "100%", borderRadius: "0.75rem" }}
-        // Fix the order of props - important props must be defined as attributes
-        // rather than being passed as nested props
-        maxBounds={kefaloniaBounds}
-        maxBoundsViscosity={1.0}
-        minZoom={9}
-        maxZoom={15}
-        scrollWheelZoom={true}
-        bounceAtZoomLimits={false}
-        attributionControl={false}
-        // Move center and zoom to standalone props to fix TypeScript errors
         center={kefaloniaCenterCoords}
         zoom={defaultZoom}
+        scrollWheelZoom={true}
+        attributionControl={false}
+        whenCreated={whenCreated}
+        bounds={kefaloniaBounds}
       >
         <TileLayer
-          // Fix the order of props - url must come before attribution
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
@@ -150,7 +152,6 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
             <Marker
               key={location.id}
               position={[location.lat, location.lng]}
-              // Fix the order of props - icon must come before eventHandlers
               icon={getCategoryIcon(location.category, isSelected)}
               eventHandlers={{
                 click: () => onPinClick(location.id),
