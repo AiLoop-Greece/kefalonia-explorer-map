@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { 
   MapContainer, 
   TileLayer, 
@@ -63,6 +63,34 @@ const MapUpdater = ({ selectedPinId }: { selectedPinId: number | null }) => {
   return null;
 };
 
+// MapInitializer component to set initial map properties
+const MapInitializer = () => {
+  const map = useMap();
+  
+  useEffect(() => {
+    // Define bounds for Kefalonia island
+    const kefaloniaBounds: L.LatLngBoundsExpression = [
+      [islandBounds.minLat, islandBounds.minLng], // Southwest corner
+      [islandBounds.maxLat, islandBounds.maxLng]  // Northeast corner
+    ];
+    
+    // Set initial view to center of Kefalonia
+    const kefaloniaCenterCoords: [number, number] = [38.2500, 20.5800];
+    const defaultZoom = 10;
+    
+    // Apply bounds and restrictions
+    map.setMaxBounds(kefaloniaBounds);
+    map.setMinZoom(9);
+    map.setMaxZoom(15);
+    map.options.bounceAtZoomLimits = false;
+    
+    // Set initial view
+    map.setView(kefaloniaCenterCoords, defaultZoom);
+  }, [map]);
+  
+  return null;
+};
+
 const LeafletMap: React.FC<LeafletMapProps> = ({ 
   selectedPinId, 
   onPinClick,
@@ -76,11 +104,10 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
     categories.map(category => [category.name, category.color])
   );
 
-  // Define bounds for Kefalonia island
-  const kefaloniaBounds: L.LatLngBoundsExpression = [
-    [islandBounds.minLat, islandBounds.minLng], // Southwest corner
-    [islandBounds.maxLat, islandBounds.maxLng]  // Northeast corner
-  ];
+  // Filter locations based on active categories
+  const filteredLocations = locations.filter(
+    location => activeCategories.includes(location.category)
+  );
 
   // Custom marker icons for each category
   const getCategoryIcon = (category: string, isSelected: boolean) => {
@@ -116,29 +143,15 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
     });
   };
 
-  // Filter locations based on active categories
-  const filteredLocations = locations.filter(
-    location => activeCategories.includes(location.category)
-  );
-
-  // Setup function for when map is created
-  const handleMapCreated = (mapInstance: L.Map) => {
-    // Apply bounds and restrictions to the map
-    mapInstance.setMaxBounds(kefaloniaBounds);
-    mapInstance.setMinZoom(9);
-    mapInstance.setMaxZoom(15);
-    mapInstance.options.bounceAtZoomLimits = false;
-  };
-
   return (
     <div className="w-full h-full" style={{ minHeight: '500px' }}>
       <MapContainer 
         style={{ height: "100%", width: "100%", borderRadius: "0.75rem" }}
-        whenCreated={handleMapCreated}
         scrollWheelZoom={true}
         attributionControl={false}
+        // Remove problematic props and use the MapInitializer component instead
       >
-        {/* Initialize the map view to the center position */}
+        <MapInitializer />
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         
         {filteredLocations.map(location => {
