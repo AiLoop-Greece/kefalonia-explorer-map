@@ -5,7 +5,7 @@ import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { X, ArrowLeft, ArrowRight, MapPin, Clock, Info } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Location } from "@/data/kefalonia-data";
-import { useMediaQuery } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { 
   Carousel, 
   CarouselContent, 
@@ -21,7 +21,7 @@ interface EmbedLocationPopupProps {
 
 const EmbedLocationPopup: React.FC<EmbedLocationPopupProps> = ({ location, onClose }) => {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const isMobile = useMediaQuery("(max-width: 640px)");
+  const isMobile = useIsMobile();
   
   // Reset active image when location changes
   useEffect(() => {
