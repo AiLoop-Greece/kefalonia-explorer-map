@@ -174,53 +174,66 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
           <div class="animate-in fade-in duration-500" style="
             position: relative;
             width: ${size}px; 
-            height: ${size + 10}px;
+            height: ${size + 12}px;
           ">
             <div style="
               position: absolute;
               top: 0;
-              left: ${size / 2 - 8}px;
-              width: 16px;
-              height: 16px;
-              border-radius: 50%;
-              background-color: white;
-              box-shadow: 0 0 0 4px ${color};
+              left: ${size / 2 - 10}px;
+              width: 20px;
+              height: 20px;
+              border-radius: 8px;
+              background: linear-gradient(135deg, ${color} 0%, ${getLighterShade(color)} 100%);
+              box-shadow: 0 2px 8px rgba(0,0,0,0.2), inset 0 -2px 2px rgba(0,0,0,0.1), inset 0 2px 4px rgba(255,255,255,0.3);
               z-index: 2;
-              ${isSelected ? `animation: pulse 2s infinite;` : ''}
+              transform: rotate(45deg);
+              ${isSelected ? `animation: pulse 2s infinite; filter: drop-shadow(0 0 8px ${color}80);` : ''}
             "></div>
             <div style="
               position: absolute;
-              top: 8px;
+              top: 2px;
+              left: ${size / 2 - 6}px;
+              width: 12px;
+              height: 12px;
+              border-radius: 4px;
+              background-color: rgba(255, 255, 255, 0.8);
+              transform: rotate(45deg);
+              z-index: 3;
+            "></div>
+            <div style="
+              position: absolute;
+              top: 16px;
               left: ${size / 2}px;
               width: 2px;
-              height: ${size - 8}px;
-              background-color: ${color};
+              height: ${size - 6}px;
+              background: linear-gradient(to bottom, ${color} 0%, ${getDarkerShade(color)} 100%);
               z-index: 1;
+              border-radius: 2px;
             "></div>
             <div style="
               position: absolute;
               bottom: 0;
               left: ${size / 2 - 6}px;
               width: 12px;
-              height: 12px;
+              height: 3px;
               border-radius: 50%;
-              background-color: ${color};
-              filter: blur(4px);
-              opacity: 0.6;
+              background-color: ${getDarkerShade(color)};
+              filter: blur(1px);
+              opacity: 0.7;
             "></div>
           </div>
         `,
         className: '',
-        iconSize: [size, size + 10],
-        iconAnchor: [size/2, size + 10],
+        iconSize: [size, size + 12],
+        iconAnchor: [size/2, size + 12],
         popupAnchor: [0, -(size + 5)]
       });
     } else {
-      // Classic circular style
+      // Enhanced classic style
       return L.divIcon({
         html: `
           <div style="
-            background-color: ${color}; 
+            background: linear-gradient(135deg, ${color} 0%, ${getLighterShade(color)} 100%);
             border: 2px solid white;
             border-radius: 50%;
             width: ${size}px; 
@@ -228,10 +241,11 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-            ${isSelected ? 'box-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px ' + color : ''}
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3), inset 0 -2px 3px rgba(0,0,0,0.2), inset 0 2px 3px rgba(255,255,255,0.2);
+            ${isSelected ? `animation: pulse 2s infinite; filter: drop-shadow(0 0 8px ${color}80);` : ''}
           ">
             <span style="
+              font-family: system-ui, sans-serif;
               color: white; 
               font-weight: bold;
               font-size: 16px;
@@ -247,6 +261,37 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
         popupAnchor: [0, -size/2]
       });
     }
+  };
+
+  // Helper functions for color manipulation
+  const getLighterShade = (hexColor: string): string => {
+    // Convert hex to RGB
+    const r = parseInt(hexColor.slice(1, 3), 16);
+    const g = parseInt(hexColor.slice(3, 5), 16);
+    const b = parseInt(hexColor.slice(5, 7), 16);
+    
+    // Lighten by 15%
+    const lighterR = Math.min(255, r + Math.round((255 - r) * 0.4));
+    const lighterG = Math.min(255, g + Math.round((255 - g) * 0.4));
+    const lighterB = Math.min(255, b + Math.round((255 - b) * 0.4));
+    
+    // Convert back to hex
+    return `#${lighterR.toString(16).padStart(2, '0')}${lighterG.toString(16).padStart(2, '0')}${lighterB.toString(16).padStart(2, '0')}`;
+  };
+  
+  const getDarkerShade = (hexColor: string): string => {
+    // Convert hex to RGB
+    const r = parseInt(hexColor.slice(1, 3), 16);
+    const g = parseInt(hexColor.slice(3, 5), 16);
+    const b = parseInt(hexColor.slice(5, 7), 16);
+    
+    // Darken by 20%
+    const darkerR = Math.max(0, r - Math.round(r * 0.3));
+    const darkerG = Math.max(0, g - Math.round(g * 0.3));
+    const darkerB = Math.max(0, b - Math.round(b * 0.3));
+    
+    // Convert back to hex
+    return `#${darkerR.toString(16).padStart(2, '0')}${darkerG.toString(16).padStart(2, '0')}${darkerB.toString(16).padStart(2, '0')}`;
   };
 
   return (
@@ -266,6 +311,7 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
             <Marker
               key={location.id}
               position={[location.lat, location.lng]}
+              icon={markerIcon}
               eventHandlers={{
                 click: () => onPinClick(location.id),
                 mouseover: (e) => {
