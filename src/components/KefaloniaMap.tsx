@@ -1,10 +1,10 @@
 
 import React, { useState, useEffect, useRef } from "react";
-import MapSVG from "./MapSVG";
 import LocationPopup from "./LocationPopup";
 import CategoryFilter from "./CategoryFilter";
 import { locations, Location, categories } from "@/data/kefalonia-data";
 import { useIsMobile } from "@/hooks/use-mobile";
+import LeafletMap from "./LeafletMap";
 
 const KefaloniaMap: React.FC = () => {
   const [selectedPinId, setSelectedPinId] = useState<number | null>(null);
@@ -12,7 +12,6 @@ const KefaloniaMap: React.FC = () => {
   const [activeCategories, setActiveCategories] = useState<string[]>(
     categories.map(c => c.name)
   );
-  const [mapDimensions, setMapDimensions] = useState({ width: 800, height: 600 });
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
 
@@ -43,21 +42,6 @@ const KefaloniaMap: React.FC = () => {
     });
   };
 
-  // Update map dimensions on resize
-  useEffect(() => {
-    const updateDimensions = () => {
-      if (mapContainerRef.current) {
-        const containerWidth = mapContainerRef.current.clientWidth;
-        const containerHeight = containerWidth * 0.75; // Maintain 4:3 aspect ratio
-        setMapDimensions({ width: containerWidth, height: containerHeight });
-      }
-    };
-
-    updateDimensions();
-    window.addEventListener("resize", updateDimensions);
-    return () => window.removeEventListener("resize", updateDimensions);
-  }, []);
-
   return (
     <div className="relative">
       <div className="p-4 md:p-6">
@@ -76,9 +60,7 @@ const KefaloniaMap: React.FC = () => {
         />
 
         <div ref={mapContainerRef} className="map-container rounded-xl shadow-xl overflow-hidden">
-          <MapSVG
-            width={mapDimensions.width}
-            height={mapDimensions.height}
+          <LeafletMap
             selectedPinId={selectedPinId}
             onPinClick={handlePinClick}
             activeCategories={activeCategories}

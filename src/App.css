@@ -1,3 +1,4 @@
+
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -40,3 +41,15 @@
 .read-the-docs {
   color: #888;
 }
+
+.map-container {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  min-height: 500px;
+  aspect-ratio: 4/3;
+  background-color: #f0f8ff;
+  border-radius: 0.75rem;
+}
+
