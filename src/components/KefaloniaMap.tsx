@@ -5,6 +5,7 @@ import CategoryFilter from "./CategoryFilter";
 import { locations, Location, categories } from "@/data/kefalonia-data";
 import { useIsMobile } from "@/hooks/use-mobile";
 import LeafletMap from "./LeafletMap";
+import { MapConfigProps } from "./LeafletMap";
 
 const KefaloniaMap: React.FC = () => {
   const [selectedPinId, setSelectedPinId] = useState<number | null>(null);
@@ -14,7 +15,7 @@ const KefaloniaMap: React.FC = () => {
   );
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
-  const [mapConfig, setMapConfig] = useState({
+  const [mapConfig, setMapConfig] = useState<MapConfigProps>({
     pinStyle: "modern",
     mapStyle: "default"
   });

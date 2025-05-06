@@ -1,23 +1,13 @@
 
 import React, { useState } from 'react';
-import LeafletMap from './LeafletMap';
+import LeafletMap, { MapConfigProps } from './LeafletMap';
 import { locations, categories } from '@/data/kefalonia-data';
 import LocationPopup from './LocationPopup';
 import CategoryFilter from './CategoryFilter';
 import { Card, CardContent } from '@/components/ui/card';
 
 export interface EmbeddableMapProps {
-  config?: {
-    height?: string;
-    width?: string;
-    showAttribution?: boolean;
-    showZoomControl?: boolean;
-    showResetView?: boolean;
-    showCategories?: boolean;
-    showLogo?: boolean;
-    mapStyle?: 'default' | 'satellite' | 'terrain';
-    pinStyle?: 'modern' | 'classic';
-  };
+  config?: MapConfigProps;
 }
 
 const EmbeddableMap: React.FC<EmbeddableMapProps> = ({ config = {} }) => {

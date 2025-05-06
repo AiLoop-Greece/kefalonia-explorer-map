@@ -80,7 +80,7 @@ const MapUpdater = ({ selectedPinId }: { selectedPinId: number | null }) => {
 };
 
 // MapInitializer component to set initial map properties
-const MapInitializer = () => {
+const MapInitializer = ({ showAttribution }: { showAttribution?: boolean }) => {
   const map = useMap();
   
   useEffect(() => {
@@ -104,10 +104,15 @@ const MapInitializer = () => {
     map.setView(kefaloniaCenterCoords, defaultZoom);
 
     // Enable scroll wheel zoom
-    if (map.options.scrollWheelZoom !== true) {
+    if (!map.scrollWheelZoom.enabled()) {
       map.scrollWheelZoom.enable();
     }
-  }, [map]);
+
+    // Set attribution control
+    if (showAttribution === false && map.attributionControl) {
+      map.removeControl(map.attributionControl);
+    }
+  }, [map, showAttribution]);
   
   return null;
 };
@@ -244,10 +249,9 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
     <div className="w-full h-full" style={{ minHeight: '500px', height, width }}>
       <MapContainer 
         style={{ height: "100%", width: "100%", borderRadius: "0.75rem" }}
-        attributionControl={showAttribution}
         zoomControl={false}
       >
-        <MapInitializer />
+        <MapInitializer showAttribution={showAttribution} />
         <TileLayer url={getTileLayer()} />
         
         {showZoomControl && <ZoomControl position="topright" />}
@@ -258,7 +262,7 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
             <Marker
               key={location.id}
               position={[location.lat, location.lng]}
-              icon={getCategoryIcon(location.category, isSelected)}
+              icon={getCategoryIcon(location.category, isSelected) as any}
               eventHandlers={{
                 click: () => onPinClick(location.id),
                 mouseover: (e) => {
@@ -271,7 +275,7 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
                 }
               }}
             >
-              <Popup className="custom-popup">
+              <Popup>
                 <div className="text-center p-1">
                   <h3 className="font-bold text-sm">{location.name}</h3>
                   <div className="text-xs text-muted-foreground">{location.category}</div>
