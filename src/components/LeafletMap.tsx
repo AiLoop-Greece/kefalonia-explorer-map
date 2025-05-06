@@ -118,12 +118,12 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
     <div className="w-full h-full" style={{ minHeight: '500px' }}>
       <MapContainer 
         style={{ height: "100%", width: "100%", borderRadius: "0.75rem" }}
-        defaultCenter={kefaloniaCenterCoords}
-        defaultZoom={defaultZoom}
+        center={kefaloniaCenterCoords}
+        zoom={defaultZoom}
       >
         <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         
         {filteredLocations.map(location => {
@@ -143,6 +143,7 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
                   }
                 }
               }}
+              icon={getCategoryIcon(location.category, isSelected)}
             >
               <Popup>
                 <div className="text-center p-1">
