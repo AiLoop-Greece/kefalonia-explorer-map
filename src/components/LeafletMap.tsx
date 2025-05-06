@@ -10,7 +10,7 @@ import {
 } from 'react-leaflet';
 import L from 'leaflet';
 import { Icon, divIcon } from 'leaflet';
-import { locations, categories, Location } from '@/data/kefalonia-data';
+import { locations, categories, Location, islandBounds } from '@/data/kefalonia-data';
 import 'leaflet/dist/leaflet.css';
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -76,6 +76,12 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
     categories.map(category => [category.name, category.color])
   );
 
+  // Define bounds for Kefalonia island
+  const kefaloniaBounds: L.LatLngBoundsExpression = [
+    [islandBounds.minLat, islandBounds.minLng], // Southwest corner
+    [islandBounds.maxLat, islandBounds.maxLng]  // Northeast corner
+  ];
+
   // Custom marker icons for each category
   const getCategoryIcon = (category: string, isSelected: boolean) => {
     const color = categoryColorMap[category] || '#808080';
@@ -121,6 +127,13 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
         style={{ height: "100%", width: "100%", borderRadius: "0.75rem" }}
         center={kefaloniaCenterCoords}
         zoom={defaultZoom}
+        maxBounds={kefaloniaBounds}
+        maxBoundsViscosity={1.0}
+        minZoom={9}
+        maxZoom={15}
+        scrollWheelZoom={true}
+        bounceAtZoomLimits={false}
+        attributionControl={false}
       >
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -133,6 +146,7 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
             <Marker
               key={location.id}
               position={[location.lat, location.lng]}
+              icon={getCategoryIcon(location.category, isSelected)}
               eventHandlers={{
                 click: () => onPinClick(location.id),
                 mouseover: (e) => {
@@ -144,7 +158,6 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
                   }
                 }
               }}
-              icon={getCategoryIcon(location.category, isSelected)}
             >
               <Popup>
                 <div className="text-center p-1">
