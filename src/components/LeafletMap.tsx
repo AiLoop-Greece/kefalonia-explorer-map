@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef } from 'react';
 import { 
   MapContainer, 
@@ -168,7 +169,7 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
     const size = isSelected ? 38 : 30;
     
     if (pinStyle === "modern") {
-      return divIcon({
+      return L.divIcon({
         html: `
           <div class="animate-in fade-in duration-500" style="
             position: relative;
@@ -216,7 +217,7 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
       });
     } else {
       // Classic circular style
-      return divIcon({
+      return L.divIcon({
         html: `
           <div style="
             background-color: ${color}; 
@@ -252,7 +253,6 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
     <div className="w-full h-full" style={{ minHeight: '500px', height, width }}>
       <MapContainer 
         style={{ height: "100%", width: "100%", borderRadius: "0.75rem" }}
-        zoomControl={false}
       >
         <MapInitializer showAttribution={showAttribution} />
         <TileLayer url={getTileLayer()} />
@@ -261,11 +261,11 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
         
         {filteredLocations.map(location => {
           const isSelected = location.id === selectedPinId;
+          const markerIcon = getCategoryIcon(location.category, isSelected);
           return (
             <Marker
               key={location.id}
               position={[location.lat, location.lng]}
-              icon={getCategoryIcon(location.category, isSelected) as any}
               eventHandlers={{
                 click: () => onPinClick(location.id),
                 mouseover: (e) => {
