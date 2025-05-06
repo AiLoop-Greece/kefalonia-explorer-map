@@ -117,13 +117,13 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
   return (
     <div className="w-full h-full" style={{ minHeight: '500px' }}>
       <MapContainer 
-        style={{ height: "100%", width: "100%", borderRadius: "0.75rem" }}
         center={kefaloniaCenterCoords}
         zoom={defaultZoom}
+        style={{ height: "100%", width: "100%", borderRadius: "0.75rem" }}
       >
         <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         
         {filteredLocations.map(location => {
@@ -132,7 +132,6 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
             <Marker
               key={location.id}
               position={[location.lat, location.lng]}
-              icon={getCategoryIcon(location.category, isSelected)}
               eventHandlers={{
                 click: () => onPinClick(location.id),
                 mouseover: (e) => {
@@ -144,10 +143,9 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
                   }
                 }
               }}
+              icon={getCategoryIcon(location.category, isSelected)}
             >
-              <Popup 
-                closeButton={false}
-              >
+              <Popup>
                 <div className="text-center p-1">
                   <h3 className="font-bold text-sm">{location.name}</h3>
                   <div className="text-xs text-muted-foreground">{location.category}</div>
