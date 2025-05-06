@@ -42,7 +42,7 @@ const EmbeddableMap: React.FC<EmbeddableMapProps> = ({
     
     // Notify parent page to prevent scroll when popup is open
     if (isEmbedded && window.parent) {
-      window.parent.postMessage('preventScroll', '*');
+      window.parent.postMessage({type: 'preventScroll'}, '*');
     }
   };
 
@@ -53,7 +53,7 @@ const EmbeddableMap: React.FC<EmbeddableMapProps> = ({
     
     // Allow scrolling again when popup is closed
     if (isEmbedded && window.parent) {
-      window.parent.postMessage('allowScroll', '*');
+      window.parent.postMessage({type: 'allowScroll'}, '*');
     }
   };
 
@@ -106,6 +106,7 @@ const EmbeddableMap: React.FC<EmbeddableMapProps> = ({
           </div>
         )}
 
+        {/* Render appropriate popup based on embedding context */}
         {isEmbedded ? (
           <EmbedLocationPopup 
             location={selectedLocation}

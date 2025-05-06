@@ -10,16 +10,16 @@ const EmbedPage: React.FC = () => {
   
   useEffect(() => {
     // Prevent scrolling of the parent page when interacting with the map
-    const preventScroll = (e: MessageEvent) => {
-      if (e.data === 'preventScroll') {
+    const handleMessage = (e: MessageEvent) => {
+      if (e.data?.type === 'preventScroll') {
         document.body.style.overflow = 'hidden';
-      } else if (e.data === 'allowScroll') {
+      } else if (e.data?.type === 'allowScroll') {
         document.body.style.overflow = '';
       }
     };
     
-    window.addEventListener('message', preventScroll);
-    return () => window.removeEventListener('message', preventScroll);
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
   }, []);
   
   return (
