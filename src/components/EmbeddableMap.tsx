@@ -3,14 +3,19 @@ import React, { useState } from 'react';
 import LeafletMap, { MapConfigProps } from './LeafletMap';
 import { locations, categories } from '@/data/kefalonia-data';
 import LocationPopup from './LocationPopup';
+import EmbedLocationPopup from './EmbedLocationPopup';
 import CategoryFilter from './CategoryFilter';
 import { Card, CardContent } from '@/components/ui/card';
 
 export interface EmbeddableMapProps {
   config?: MapConfigProps;
+  isEmbedded?: boolean;
 }
 
-const EmbeddableMap: React.FC<EmbeddableMapProps> = ({ config = {} }) => {
+const EmbeddableMap: React.FC<EmbeddableMapProps> = ({ 
+  config = {},
+  isEmbedded = false
+}) => {
   const [selectedPinId, setSelectedPinId] = useState<number | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<any>(null);
   const [activeCategories, setActiveCategories] = useState<string[]>(
@@ -34,12 +39,22 @@ const EmbeddableMap: React.FC<EmbeddableMapProps> = ({ config = {} }) => {
     setSelectedPinId(id);
     const location = locations.find(loc => loc.id === id) || null;
     setSelectedLocation(location);
+    
+    // Notify parent page to prevent scroll when popup is open
+    if (isEmbedded && window.parent) {
+      window.parent.postMessage('preventScroll', '*');
+    }
   };
 
   // Close popup
   const handleClosePopup = () => {
     setSelectedPinId(null);
     setSelectedLocation(null);
+    
+    // Allow scrolling again when popup is closed
+    if (isEmbedded && window.parent) {
+      window.parent.postMessage('allowScroll', '*');
+    }
   };
 
   // Toggle category filter
@@ -91,10 +106,17 @@ const EmbeddableMap: React.FC<EmbeddableMapProps> = ({ config = {} }) => {
           </div>
         )}
 
-        <LocationPopup 
-          location={selectedLocation} 
-          onClose={handleClosePopup} 
-        />
+        {isEmbedded ? (
+          <EmbedLocationPopup 
+            location={selectedLocation}
+            onClose={handleClosePopup}
+          />
+        ) : (
+          <LocationPopup 
+            location={selectedLocation}
+            onClose={handleClosePopup}
+          />
+        )}
       </div>
     </div>
   );

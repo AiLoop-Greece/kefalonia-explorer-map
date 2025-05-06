@@ -24,7 +24,7 @@ const EmbedPage: React.FC = () => {
   
   return (
     <div className="h-full w-full">
-      <EmbeddableMap config={config} />
+      <EmbeddableMap config={config} isEmbedded={true} />
     </div>
   );
 };
