@@ -86,6 +86,11 @@ const MapInitializer = () => {
     
     // Set initial view
     map.setView(kefaloniaCenterCoords, defaultZoom);
+
+    // Enable scroll wheel zoom
+    if (map.options.scrollWheelZoom !== true) {
+      map.scrollWheelZoom.enable();
+    }
   }, [map]);
   
   return null;
@@ -147,9 +152,6 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
     <div className="w-full h-full" style={{ minHeight: '500px' }}>
       <MapContainer 
         style={{ height: "100%", width: "100%", borderRadius: "0.75rem" }}
-        scrollWheelZoom={true}
-        attributionControl={false}
-        // Remove problematic props and use the MapInitializer component instead
       >
         <MapInitializer />
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
