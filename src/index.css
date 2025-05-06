@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -127,12 +128,14 @@
   width: 100%;
   height: 100%;
   z-index: 1;
+  font-family: inherit;
 }
 
 .custom-popup .leaflet-popup-content-wrapper {
   background-color: white;
   border-radius: 0.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
 }
 
 .custom-popup .leaflet-popup-tip {
@@ -141,6 +144,40 @@
 
 .custom-popup .leaflet-popup-content {
   margin: 8px;
+  min-width: 150px;
+}
+
+.leaflet-control-zoom {
+  border-radius: 8px !important;
+  overflow: hidden;
+}
+
+.leaflet-control-zoom a {
+  width: 32px !important;
+  height: 32px !important;
+  line-height: 32px !important;
+  font-size: 16px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: none !important;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+  }
+  
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 8px rgba(255, 255, 255, 0);
+  }
+  
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+  }
 }
 
 .animate-pulse-glow {
@@ -175,3 +212,26 @@
     @apply bg-muted text-muted-foreground hover:bg-muted/80;
   }
 }
+
+/* Map Embed Container */
+.kefalonia-map-embed {
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.kefalonia-map-logo {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  z-index: 1000;
+  background-color: rgba(255, 255, 255, 0.7);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+

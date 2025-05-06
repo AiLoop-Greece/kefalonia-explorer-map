@@ -14,6 +14,10 @@ const KefaloniaMap: React.FC = () => {
   );
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
+  const [mapConfig, setMapConfig] = useState({
+    pinStyle: "modern",
+    mapStyle: "default"
+  });
 
   // Handle pin selection
   const handlePinClick = (id: number) => {
@@ -64,6 +68,7 @@ const KefaloniaMap: React.FC = () => {
             selectedPinId={selectedPinId}
             onPinClick={handlePinClick}
             activeCategories={activeCategories}
+            config={mapConfig}
           />
         </div>
 

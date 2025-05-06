@@ -2,7 +2,9 @@
 import React from "react";
 import KefaloniaMap from "@/components/KefaloniaMap";
 import { Card, CardContent } from "@/components/ui/card";
-import { Waves, MapPin } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Waves, MapPin, Code } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Index = () => {
   return (
@@ -14,7 +16,7 @@ const Index = () => {
           </CardContent>
         </Card>
         
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center gap-3 mb-4">
@@ -26,8 +28,7 @@ const Index = () => {
               <p className="text-muted-foreground">
                 This interactive map showcases the most beautiful and interesting locations 
                 across the island of Kefalonia, Greece. Click on pins to discover beaches, 
-                villages, historical sites, natural wonders, and landmarks. Each pin reveals 
-                detailed information, travel tips, and stunning imagery.
+                villages, historical sites, natural wonders, and landmarks.
               </p>
             </CardContent>
           </Card>
@@ -43,9 +44,30 @@ const Index = () => {
               <ul className="text-muted-foreground space-y-2">
                 <li>• Click on any pin to view details about the location</li>
                 <li>• Use the category filters to show only specific types of locations</li>
-                <li>• Explore images, travel directions, and local tips for each destination</li>
+                <li>• Explore images, travel directions, and local tips</li>
                 <li>• Perfect for planning your Kefalonia vacation itinerary</li>
               </ul>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="bg-kefalonia-accent p-2 rounded-full">
+                  <Code className="h-5 w-5 text-white" />
+                </div>
+                <h2 className="text-xl font-bold">Embed This Map</h2>
+              </div>
+              <p className="text-muted-foreground mb-4">
+                Want to include this interactive Kefalonia map on your own website? 
+                Use our embed builder to customize and generate the code.
+              </p>
+              <Link to="/embed-builder">
+                <Button className="w-full">
+                  <Code className="mr-2 h-4 w-4" />
+                  Create Embed Code
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         </div>
