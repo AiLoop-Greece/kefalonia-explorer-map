@@ -53,3 +53,12 @@
   border-radius: 0.75rem;
 }
 
+/* Fix for Leaflet marker icons */
+.leaflet-default-icon-path {
+  background-image: url(https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png) !important;
+}
+
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+}
