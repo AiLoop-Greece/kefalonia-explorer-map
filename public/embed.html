@@ -1,0 +1,96 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kefalonia Explorer Map</title>
+  <meta name="description" content="Interactive Map of Kefalonia" />
+  
+  <!-- Allow embedding from any origin -->
+  <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin-allow-popups" />
+
+  <!-- Preload critical resources -->
+  <link rel="stylesheet" href="./embed-assets/leaflet.css" />
+  
+  <style>
+    /* Essential embed styles */
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+    }
+    #embed-root {
+      height: 100%;
+      width: 100%;
+    }
+    .map-loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      width: 100%;
+      background: #f5f5f5;
+      color: #333;
+      font-family: sans-serif;
+    }
+    .map-loading-spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #4A6FA5;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      margin-right: 10px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div id="embed-root">
+    <div class="map-loading">
+      <div class="map-loading-spinner"></div>
+      <span>Loading map...</span>
+    </div>
+  </div>
+  
+  <!-- Embed specific bundle -->
+  <script type="module" src="./embed-assets/embed.js"></script>
+  
+  <!-- Error handling -->
+  <script>
+    window.addEventListener('error', function(event) {
+      console.error('Map error:', event.message);
+      try {
+        window.parent.postMessage({ 
+          type: 'MAP_EMBED_ERROR', 
+          error: event.message 
+        }, '*');
+        
+        // Show error UI
+        document.getElementById('embed-root').innerHTML = 
+          '<div style="padding: 20px; text-align: center;">' +
+          '<p>Sorry, there was an error loading the map.</p>' +
+          '<p>Please refresh or try again later.</p>' +
+          '</div>';
+      } catch (e) {
+        console.error('Failed to handle error:', e);
+      }
+    });
+
+    // Let parent know iframe is loaded
+    window.addEventListener('load', function() {
+      try {
+        window.parent.postMessage({ type: 'MAP_EMBED_LOADED' }, '*');
+      } catch (e) {
+        console.error('Failed to send loaded message:', e);
+      }
+    });
+  </script>
+</body>
+</html>

@@ -4,13 +4,14 @@ import { useLocation } from 'react-router-dom';
 import EmbeddableMap from '@/components/EmbeddableMap';
 import { parseEmbedParams } from '@/utils/embed-utils';
 
-// Ensure Leaflet CSS is directly included
+// Explicitly import Leaflet CSS here to ensure it's available
 import 'leaflet/dist/leaflet.css';
 
 const EmbedPage: React.FC = () => {
   const location = useLocation();
   const config = parseEmbedParams(location.search);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
   
   useEffect(() => {
     // Apply embed-specific styles to the page
@@ -23,26 +24,27 @@ const EmbedPage: React.FC = () => {
     // Let parent know iframe is ready
     const sendReadyMessage = () => {
       try {
-        window.parent.postMessage({ type: 'MAP_EMBED_READY' }, '*');
-        console.log('Sent ready message to parent');
+        window.parent.postMessage({ 
+          type: 'MAP_EMBED_READY',
+          timestamp: new Date().toISOString()
+        }, '*');
+        console.log('Map embed ready message sent to parent');
+        setIsLoaded(true);
       } catch (err) {
         console.error('Failed to send ready message:', err);
+        setErrorMessage('Communication error: Unable to send ready message to parent page');
       }
     };
     
-    // Try sending the ready message immediately
+    // Send immediately and after a delay to ensure it's received
     sendReadyMessage();
+    const readyTimer = setTimeout(sendReadyMessage, 1000);
     
-    // Also try sending it after a short delay to ensure everything is loaded
-    const readyTimer = setTimeout(sendReadyMessage, 500);
-    
-    // Prevent scrolling of the parent page when interacting with the map
+    // Handle messages from parent
     const handleMessage = (e: MessageEvent) => {
       try {
-        if (e.data?.type === 'preventScroll') {
-          document.body.style.overflow = 'hidden';
-        } else if (e.data?.type === 'allowScroll') {
-          document.body.style.overflow = '';
+        if (e.data?.type === 'PARENT_ACKNOWLEDGED') {
+          console.log('Parent acknowledged embed');
         }
       } catch (err) {
         console.error('Error handling message:', err);
@@ -51,16 +53,17 @@ const EmbedPage: React.FC = () => {
     
     window.addEventListener('message', handleMessage);
     
-    // Handle errors for debugging
+    // Error handling
     const handleError = (event: ErrorEvent) => {
-      const errorMsg = `Embed error: ${event.message}`;
+      const errorMsg = `Map embedding error: ${event.message}`;
       console.error(errorMsg);
       setErrorMessage(errorMsg);
       
       try {
         window.parent.postMessage({ 
           type: 'MAP_EMBED_ERROR', 
-          error: event.message 
+          error: event.message,
+          timestamp: new Date().toISOString()
         }, '*');
       } catch (err) {
         console.error('Failed to send error message:', err);
@@ -86,6 +89,14 @@ const EmbedPage: React.FC = () => {
           <span className="block sm:inline">{errorMessage}</span>
         </div>
       )}
+      
+      {!isLoaded && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-50 bg-opacity-80 z-10">
+          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary mr-3"></div>
+          <span>Loading map...</span>
+        </div>
+      )}
+      
       <EmbeddableMap config={config} isEmbedded={true} />
     </div>
   );

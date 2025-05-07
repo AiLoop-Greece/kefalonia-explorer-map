@@ -11,15 +11,26 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+// Check if this is running in an embed context
+const isEmbedContext = window.location.pathname === '/embed' || 
+                        window.location.pathname === '/embed.html';
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
+      {/* Only show toasts in non-embed contexts */}
+      {!isEmbedContext && (
+        <>
+          <Toaster />
+          <Sonner />
+        </>
+      )}
+      
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/embed" element={<EmbedPage />} />
+          <Route path="/embed.html" element={<EmbedPage />} /> {/* Alternative path */}
           <Route path="/embed-builder" element={<EmbedBuilder />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
