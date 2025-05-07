@@ -40,6 +40,11 @@ export default defineConfig(({ mode }) => ({
         },
         chunkFileNames: 'assets/[name]-[hash].js',
         assetFileNames: (assetInfo) => {
+          // Handle undefined name safely
+          if (!assetInfo.name) {
+            return 'assets/[name]-[hash].[ext]';
+          }
+          
           const info = assetInfo.name.split('.');
           const ext = info[info.length - 1];
           
