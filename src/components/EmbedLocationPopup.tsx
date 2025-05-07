@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
@@ -32,8 +31,27 @@ const EmbedLocationPopup: React.FC<EmbedLocationPopupProps> = ({ location, onClo
   useEffect(() => {
     if (location) {
       document.body.classList.add('overflow-hidden');
+      
+      // Inform parent window about popup state
+      try {
+        window.parent?.postMessage({
+          type: 'MAP_POPUP_OPENED',
+          locationId: location.id
+        }, '*');
+      } catch (error) {
+        console.error('Error sending popup open message:', error);
+      }
     } else {
       document.body.classList.remove('overflow-hidden');
+      
+      // Inform parent window about popup state
+      try {
+        window.parent?.postMessage({
+          type: 'MAP_POPUP_CLOSED'
+        }, '*');
+      } catch (error) {
+        console.error('Error sending popup close message:', error);
+      }
     }
     
     return () => {
@@ -43,6 +61,7 @@ const EmbedLocationPopup: React.FC<EmbedLocationPopupProps> = ({ location, onClo
 
   if (!location) return null;
 
+  // Use inline styles for the popup to ensure they work in embedded contexts
   const popupStyle = {
     position: 'fixed' as const,
     top: 0,
@@ -51,6 +70,14 @@ const EmbedLocationPopup: React.FC<EmbedLocationPopupProps> = ({ location, onClo
     height: '100%', 
     zIndex: 9999,
     overflow: 'hidden',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)'  // Add semi-transparent background
+  };
+
+  // Handle image errors
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    console.error('Failed to load image:', e.currentTarget.src);
+    // Set a placeholder or fallback image
+    e.currentTarget.src = '/placeholder.svg';
   };
 
   // Create popup with fixed positioning to ensure it covers the entire viewport
@@ -81,6 +108,8 @@ const EmbedLocationPopup: React.FC<EmbedLocationPopupProps> = ({ location, onClo
                             alt={`${location.name} - image ${i + 1}`}
                             className="h-full w-full object-cover"
                             loading="lazy"
+                            onError={handleImageError}
+                            crossOrigin="anonymous"
                           />
                         </div>
                       </CarouselItem>
@@ -188,6 +217,8 @@ const EmbedLocationPopup: React.FC<EmbedLocationPopupProps> = ({ location, onClo
                             alt={`${location.name} - image ${i + 1}`}
                             className="h-full w-full object-cover"
                             loading="lazy"
+                            onError={handleImageError}
+                            crossOrigin="anonymous"
                           />
                         </div>
                       </CarouselItem>

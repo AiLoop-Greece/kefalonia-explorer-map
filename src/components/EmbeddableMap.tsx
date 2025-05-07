@@ -21,6 +21,7 @@ const EmbeddableMap: React.FC<EmbeddableMapProps> = ({
     categories.map(c => c.name)
   );
   const [mapReady, setMapReady] = useState(false);
+  const [mapError, setMapError] = useState<string | null>(null);
 
   const {
     height = "500px",
@@ -36,13 +37,27 @@ const EmbeddableMap: React.FC<EmbeddableMapProps> = ({
   
   // Notify parent when component mounts
   useEffect(() => {
-    if (isEmbedded && window.parent) {
+    if (isEmbedded) {
       setMapReady(true);
       try {
-        window.parent.postMessage({ type: 'MAP_COMPONENT_MOUNTED' }, '*');
+        // Use * for origin to allow embedding on any site
+        window.parent?.postMessage({ type: 'MAP_COMPONENT_MOUNTED' }, '*');
       } catch (err) {
         console.error('Error communicating with parent window:', err);
+        setMapError('Failed to communicate with parent window');
       }
+      
+      // Set up error handler for the map
+      const handleMapError = (event: ErrorEvent) => {
+        console.error('Map error:', event.message);
+        setMapError(event.message);
+      };
+      
+      window.addEventListener('error', handleMapError);
+      
+      return () => {
+        window.removeEventListener('error', handleMapError);
+      };
     }
   }, [isEmbedded]);
 
@@ -94,6 +109,12 @@ const EmbeddableMap: React.FC<EmbeddableMapProps> = ({
   return (
     <div className="kefalonia-map-embed relative" style={{ height, width }}>
       <div className="relative h-full">
+        {mapError && (
+          <div className="absolute top-0 left-0 right-0 z-50 bg-red-100 border border-red-400 text-red-700 px-4 py-3 text-sm">
+            Map error: {mapError}
+          </div>
+        )}
+        
         {showCategories && (
           <div className="p-2">
             <CategoryFilter 

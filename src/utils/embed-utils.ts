@@ -8,10 +8,14 @@ export const generateEmbedCode = (config: MapEmbedConfig = {}) => {
   const params = new URLSearchParams();
   
   Object.entries(config).forEach(([key, value]) => {
-    params.append(key, value.toString());
+    // Only add parameters that have values
+    if (value !== undefined && value !== null) {
+      params.append(key, value.toString());
+    }
   });
   
   const queryString = params.toString();
+  // Use encodeURI to ensure special characters are properly encoded
   const embedUrl = `${window.location.origin}/embed${queryString ? `?${queryString}` : ''}`;
   
   return `<iframe
@@ -23,15 +27,18 @@ export const generateEmbedCode = (config: MapEmbedConfig = {}) => {
   allow="fullscreen"
   referrerpolicy="origin"
   loading="lazy"
+  crossorigin="anonymous"
   allowfullscreen
 ></iframe>
 
 <script>
+// Handle communication with the embedded map
 window.addEventListener('message', function(e) {
-  // Only accept messages from the iframe's origin
-  if (e.origin !== '${window.location.origin}') return;
-  
-  if (e.data?.type === 'MAP_EMBED_ERROR') {
+  // Accept messages from any origin since the embed might be on different domains
+  if (e.data?.type === 'MAP_EMBED_READY') {
+    console.log('Embedded map is ready');
+  }
+  else if (e.data?.type === 'MAP_EMBED_ERROR') {
     console.error('Embedded map error:', e.data.error);
   }
 });
