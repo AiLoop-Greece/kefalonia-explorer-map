@@ -1,3 +1,4 @@
+
 import { MapConfigProps } from '../components/LeafletMap';
 
 export type MapEmbedConfig = MapConfigProps;
@@ -19,8 +20,22 @@ export const generateEmbedCode = (config: MapEmbedConfig = {}) => {
   height="${config.height || '500px'}"
   style="border: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"
   title="Kefalonia Explorer Map"
+  allow="fullscreen"
+  referrerpolicy="origin"
+  loading="lazy"
   allowfullscreen
-></iframe>`;
+></iframe>
+
+<script>
+window.addEventListener('message', function(e) {
+  // Only accept messages from the iframe's origin
+  if (e.origin !== '${window.location.origin}') return;
+  
+  if (e.data?.type === 'MAP_EMBED_ERROR') {
+    console.error('Embedded map error:', e.data.error);
+  }
+});
+</script>`;
 };
 
 // Parse query parameters into config object

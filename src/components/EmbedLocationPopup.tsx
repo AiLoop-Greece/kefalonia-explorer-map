@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
-import { X, ArrowLeft, ArrowRight, MapPin, Clock, Info } from 'lucide-react';
+import { X, MapPin, Clock, Info } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Location } from "@/data/kefalonia-data";
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -43,9 +43,19 @@ const EmbedLocationPopup: React.FC<EmbedLocationPopupProps> = ({ location, onClo
 
   if (!location) return null;
 
-  // Create popup outside regular DOM flow to ensure it covers entire screen
+  const popupStyle = {
+    position: 'fixed' as const,
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%', 
+    zIndex: 9999,
+    overflow: 'hidden',
+  };
+
+  // Create popup with fixed positioning to ensure it covers the entire viewport
   return (
-    <div className="fixed inset-0 z-[1000] overflow-hidden" style={{position: 'fixed'}}>
+    <div style={popupStyle}>
       {isMobile ? (
         <Drawer open={!!location} onOpenChange={() => onClose()}>
           <DrawerContent className="p-0 max-h-[100vh] overflow-y-auto">
@@ -70,6 +80,7 @@ const EmbedLocationPopup: React.FC<EmbedLocationPopupProps> = ({ location, onClo
                             src={img}
                             alt={`${location.name} - image ${i + 1}`}
                             className="h-full w-full object-cover"
+                            loading="lazy"
                           />
                         </div>
                       </CarouselItem>
@@ -176,6 +187,7 @@ const EmbedLocationPopup: React.FC<EmbedLocationPopupProps> = ({ location, onClo
                             src={img}
                             alt={`${location.name} - image ${i + 1}`}
                             className="h-full w-full object-cover"
+                            loading="lazy"
                           />
                         </div>
                       </CarouselItem>

@@ -1,11 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import LeafletMap, { MapConfigProps } from './LeafletMap';
 import { locations, categories } from '@/data/kefalonia-data';
 import LocationPopup from './LocationPopup';
 import EmbedLocationPopup from './EmbedLocationPopup';
 import CategoryFilter from './CategoryFilter';
-import { Card, CardContent } from '@/components/ui/card';
 
 export interface EmbeddableMapProps {
   config?: MapConfigProps;
@@ -21,6 +20,7 @@ const EmbeddableMap: React.FC<EmbeddableMapProps> = ({
   const [activeCategories, setActiveCategories] = useState<string[]>(
     categories.map(c => c.name)
   );
+  const [mapReady, setMapReady] = useState(false);
 
   const {
     height = "500px",
@@ -33,6 +33,18 @@ const EmbeddableMap: React.FC<EmbeddableMapProps> = ({
     mapStyle = "default",
     pinStyle = "modern"
   } = config;
+  
+  // Notify parent when component mounts
+  useEffect(() => {
+    if (isEmbedded && window.parent) {
+      setMapReady(true);
+      try {
+        window.parent.postMessage({ type: 'MAP_COMPONENT_MOUNTED' }, '*');
+      } catch (err) {
+        console.error('Error communicating with parent window:', err);
+      }
+    }
+  }, [isEmbedded]);
 
   // Handle pin selection
   const handlePinClick = (id: number) => {
@@ -42,7 +54,11 @@ const EmbeddableMap: React.FC<EmbeddableMapProps> = ({
     
     // Notify parent page to prevent scroll when popup is open
     if (isEmbedded && window.parent) {
-      window.parent.postMessage({type: 'preventScroll'}, '*');
+      try {
+        window.parent.postMessage({type: 'preventScroll'}, '*');
+      } catch (err) {
+        console.error('Error sending preventScroll message:', err);
+      }
     }
   };
 
@@ -53,7 +69,11 @@ const EmbeddableMap: React.FC<EmbeddableMapProps> = ({
     
     // Allow scrolling again when popup is closed
     if (isEmbedded && window.parent) {
-      window.parent.postMessage({type: 'allowScroll'}, '*');
+      try {
+        window.parent.postMessage({type: 'allowScroll'}, '*');
+      } catch (err) {
+        console.error('Error sending allowScroll message:', err);
+      }
     }
   };
 
@@ -72,7 +92,7 @@ const EmbeddableMap: React.FC<EmbeddableMapProps> = ({
   };
 
   return (
-    <div className="kefalonia-map-embed" style={{ height, width }}>
+    <div className="kefalonia-map-embed relative" style={{ height, width }}>
       <div className="relative h-full">
         {showCategories && (
           <div className="p-2">
@@ -101,7 +121,7 @@ const EmbeddableMap: React.FC<EmbeddableMapProps> = ({
         </div>
 
         {showLogo && (
-          <div className="kefalonia-map-logo">
+          <div className="kefalonia-map-logo absolute bottom-2 left-2 bg-white/80 px-2 py-1 text-xs rounded-md shadow-sm">
             Kefalonia Explorer
           </div>
         )}
