@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { X, ArrowLeft, ArrowRight, MapPin, Clock, Info } from "lucide-react";
+import { X, MapPin, Clock, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Location } from "@/data/kefalonia-data";
 import gsap from "gsap";
@@ -12,13 +12,7 @@ interface LocationPopupProps {
 }
 
 const LocationPopup: React.FC<LocationPopupProps> = ({ location, onClose }) => {
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
   const contentRef = useRef<HTMLDivElement>(null);
-  
-  // Reset active image when location changes
-  useEffect(() => {
-    setActiveImageIndex(0);
-  }, [location?.id]);
   
   // Animate content when popup opens
   useEffect(() => {
@@ -32,19 +26,6 @@ const LocationPopup: React.FC<LocationPopupProps> = ({ location, onClose }) => {
   }, [location]);
 
   if (!location) return null;
-  
-  // Image carousel controls
-  const nextImage = () => {
-    if (location.images.length > 1) {
-      setActiveImageIndex((prev) => (prev + 1) % location.images.length);
-    }
-  };
-  
-  const prevImage = () => {
-    if (location.images.length > 1) {
-      setActiveImageIndex((prev) => (prev - 1 + location.images.length) % location.images.length);
-    }
-  };
 
   return (
     <Dialog open={!!location} onOpenChange={() => onClose()}>
@@ -56,56 +37,9 @@ const LocationPopup: React.FC<LocationPopupProps> = ({ location, onClose }) => {
           >
             <X className="h-4 w-4" />
           </button>
-          
-          {/* Image carousel */}
-          <div className="relative h-[300px] w-full overflow-hidden">
-            {location.images.map((img, i) => (
-              <div 
-                key={i} 
-                className={`absolute inset-0 transition-opacity duration-500 ${i === activeImageIndex ? 'opacity-100' : 'opacity-0'}`}
-              >
-                <img
-                  src={img}
-                  alt={`${location.name} - image ${i + 1}`}
-                  className="h-full w-full object-cover"
-                />
-              </div>
-            ))}
-            
-            {/* Image navigation buttons */}
-            {location.images.length > 1 && (
-              <>
-                <button
-                  onClick={prevImage}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/20 p-1.5 text-white hover:bg-black/40"
-                >
-                  <ArrowLeft className="h-5 w-5" />
-                </button>
-                <button
-                  onClick={nextImage}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/20 p-1.5 text-white hover:bg-black/40"
-                >
-                  <ArrowRight className="h-5 w-5" />
-                </button>
-                
-                {/* Image indicators */}
-                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex space-x-1">
-                  {location.images.map((_, i) => (
-                    <button
-                      key={i}
-                      className={`h-1.5 rounded-full ${
-                        i === activeImageIndex ? 'w-6 bg-white' : 'w-1.5 bg-white/50'
-                      } transition-all duration-300`}
-                      onClick={() => setActiveImageIndex(i)}
-                    />
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
 
           {/* Content */}
-          <div ref={contentRef} className="pin-content p-6">
+          <div ref={contentRef} className="p-6">
             <div className="flex items-center gap-2 mb-4">
               <span className={`inline-block w-2 h-2 rounded-full bg-kefalonia-secondary`}></span>
               <span className="text-xs uppercase font-semibold text-kefalonia-secondary tracking-wider">{location.category}</span>

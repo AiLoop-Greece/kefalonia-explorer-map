@@ -1,17 +1,11 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useEffect } from 'react';
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { X, MapPin, Clock, Info } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Location } from "@/data/kefalonia-data";
 import { useIsMobile } from '@/hooks/use-mobile';
-import { 
-  Carousel, 
-  CarouselContent, 
-  CarouselItem, 
-  CarouselNext, 
-  CarouselPrevious 
-} from "@/components/ui/carousel";
 
 interface EmbedLocationPopupProps {
   location: Location | null;
@@ -19,14 +13,8 @@ interface EmbedLocationPopupProps {
 }
 
 const EmbedLocationPopup: React.FC<EmbedLocationPopupProps> = ({ location, onClose }) => {
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
   const isMobile = useIsMobile();
   
-  // Reset active image when location changes
-  useEffect(() => {
-    setActiveImageIndex(0);
-  }, [location?.id]);
-
   // Add class to body when popup is open to prevent scrolling
   useEffect(() => {
     if (location) {
@@ -73,13 +61,6 @@ const EmbedLocationPopup: React.FC<EmbedLocationPopupProps> = ({ location, onClo
     backgroundColor: 'rgba(0, 0, 0, 0.5)'  // Add semi-transparent background
   };
 
-  // Handle image errors
-  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    console.error('Failed to load image:', e.currentTarget.src);
-    // Set a placeholder or fallback image
-    e.currentTarget.src = '/placeholder.svg';
-  };
-
   // Create popup with fixed positioning to ensure it covers the entire viewport
   return (
     <div style={popupStyle}>
@@ -95,48 +76,6 @@ const EmbedLocationPopup: React.FC<EmbedLocationPopupProps> = ({ location, onClo
               >
                 <X className="h-5 w-5" />
               </button>
-              
-              {/* Image carousel */}
-              <div className="w-full">
-                <Carousel className="w-full h-[40vh] sm:h-[50vh]">
-                  <CarouselContent>
-                    {location.images.map((img, i) => (
-                      <CarouselItem key={i}>
-                        <div className="relative h-full w-full">
-                          <img
-                            src={img}
-                            alt={`${location.name} - image ${i + 1}`}
-                            className="h-full w-full object-cover"
-                            loading="lazy"
-                            onError={handleImageError}
-                            crossOrigin="anonymous"
-                          />
-                        </div>
-                      </CarouselItem>
-                    ))}
-                  </CarouselContent>
-                  
-                  {location.images.length > 1 && (
-                    <>
-                      <CarouselPrevious className="left-4" />
-                      <CarouselNext className="right-4" />
-                      
-                      {/* Image indicators */}
-                      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-1 z-10">
-                        {location.images.map((_, i) => (
-                          <button
-                            key={i}
-                            className={`h-1.5 rounded-full ${
-                              i === activeImageIndex ? 'w-6 bg-white' : 'w-1.5 bg-white/50'
-                            } transition-all duration-300`}
-                            onClick={() => setActiveImageIndex(i)}
-                          />
-                        ))}
-                      </div>
-                    </>
-                  )}
-                </Carousel>
-              </div>
 
               {/* Content */}
               <div className="p-6 pb-24 sm:pb-8">
@@ -204,48 +143,6 @@ const EmbedLocationPopup: React.FC<EmbedLocationPopupProps> = ({ location, onClo
               >
                 <X className="h-5 w-5" />
               </button>
-              
-              {/* Image carousel */}
-              <div className="w-full">
-                <Carousel className="w-full h-[40vh] sm:h-[50vh]">
-                  <CarouselContent>
-                    {location.images.map((img, i) => (
-                      <CarouselItem key={i}>
-                        <div className="relative h-full w-full">
-                          <img
-                            src={img}
-                            alt={`${location.name} - image ${i + 1}`}
-                            className="h-full w-full object-cover"
-                            loading="lazy"
-                            onError={handleImageError}
-                            crossOrigin="anonymous"
-                          />
-                        </div>
-                      </CarouselItem>
-                    ))}
-                  </CarouselContent>
-                  
-                  {location.images.length > 1 && (
-                    <>
-                      <CarouselPrevious className="left-4" />
-                      <CarouselNext className="right-4" />
-                      
-                      {/* Image indicators */}
-                      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-1 z-10">
-                        {location.images.map((_, i) => (
-                          <button
-                            key={i}
-                            className={`h-1.5 rounded-full ${
-                              i === activeImageIndex ? 'w-6 bg-white' : 'w-1.5 bg-white/50'
-                            } transition-all duration-300`}
-                            onClick={() => setActiveImageIndex(i)}
-                          />
-                        ))}
-                      </div>
-                    </>
-                  )}
-                </Carousel>
-              </div>
 
               {/* Content */}
               <div className="p-6 pb-24 sm:pb-8">
