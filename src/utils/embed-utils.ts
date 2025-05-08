@@ -17,14 +17,15 @@ export const generateEmbedCode = (config: MapEmbedConfig = {}) => {
   const queryString = params.toString();
   
   // Use absolute URL to ensure it works in all contexts
-  // Replace with your production domain in production
   const baseEmbedUrl = window.location.origin;
   const embedPath = '/embed.html'; // Direct HTML file instead of a route
   const embedUrl = `${baseEmbedUrl}${embedPath}${queryString ? `?${queryString}` : ''}`;
   
+  // Generate a more robust embed code with better error handling
   return `<!-- Kefalonia Explorer Map Embed -->
 <div id="kefalonia-map-container" style="width: ${config.width || '100%'}; height: ${config.height || '500px'}; position: relative;">
   <iframe
+    id="kefalonia-map-iframe"
     src="${embedUrl}"
     width="100%"
     height="100%"
@@ -36,34 +37,79 @@ export const generateEmbedCode = (config: MapEmbedConfig = {}) => {
   ></iframe>
   <script>
   (function() {
-    // Fallback content in case iframe fails to load
+    // Improved embed handling script with retries and better error handling
     var container = document.getElementById('kefalonia-map-container');
-    var iframe = container.querySelector('iframe');
-    var fallbackTimer = setTimeout(function() {
+    var iframe = document.getElementById('kefalonia-map-iframe');
+    var mapLoaded = false;
+    var lastPingTime = Date.now();
+    var pingInterval;
+    
+    // Show a fallback message if the iframe fails to load
+    function showFallback(message) {
       if (container && iframe) {
-        // Create fallback content if iframe fails to load in 10 seconds
         var fallback = document.createElement('div');
-        fallback.innerHTML = '<div style="text-align: center; padding: 40px 20px; background: #f8f9fa; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 12px;"><p style="margin-bottom: 20px;">Unable to load Kefalonia Explorer Map</p><a href="${baseEmbedUrl}" target="_blank" style="display: inline-block; background: #4A6FA5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px;">View Map in New Window</a></div>';
+        fallback.innerHTML = '<div style="text-align: center; padding: 40px 20px; background: #f8f9fa; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 12px;"><p style="margin-bottom: 20px;">' + message + '</p><a href="${baseEmbedUrl}" target="_blank" style="display: inline-block; background: #4A6FA5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px;">View Map in New Window</a></div>';
         container.appendChild(fallback);
-        iframe.style.opacity = '0';
+        iframe.style.display = 'none';
+      }
+    }
+    
+    // Set timeout for initial load
+    var loadTimeout = setTimeout(function() {
+      if (!mapLoaded) {
+        showFallback('Unable to load Kefalonia Explorer Map');
       }
     }, 10000);
-
+    
+    // Ping the iframe regularly to check if it's still responsive
+    function startPingInterval() {
+      pingInterval = setInterval(function() {
+        try {
+          iframe.contentWindow.postMessage({ type: 'PING_EMBED' }, '*');
+          
+          // Check if we haven't received a pong in a while
+          if (Date.now() - lastPingTime > 30000) {
+            console.warn('Map embed unresponsive');
+            showFallback('Map is unresponsive. Please refresh the page.');
+            clearInterval(pingInterval);
+          }
+        } catch (e) {
+          console.error('Error pinging map iframe:', e);
+        }
+      }, 15000);
+    }
+    
     // Handle iframe load success
     iframe.addEventListener('load', function() {
-      clearTimeout(fallbackTimer);
-      iframe.style.opacity = '1';
+      console.log('Kefalonia map iframe loaded');
+      clearTimeout(loadTimeout);
     });
-
+    
     // Handle communication with the embedded map
     window.addEventListener('message', function(e) {
-      if (e.data?.type === 'MAP_EMBED_READY') {
-        clearTimeout(fallbackTimer);
-        console.log('Kefalonia map loaded successfully');
+      if (e.data) {
+        if (e.data.type === 'MAP_EMBED_READY') {
+          clearTimeout(loadTimeout);
+          mapLoaded = true;
+          console.log('Kefalonia map loaded successfully');
+          startPingInterval();
+        }
+        else if (e.data.type === 'MAP_EMBED_ERROR') {
+          console.error('Kefalonia map error:', e.data.error);
+          if (e.data.fatal) {
+            showFallback('Error loading map: ' + e.data.error);
+          }
+        }
+        else if (e.data.type === 'PONG_EMBED') {
+          lastPingTime = Date.now();
+        }
       }
-      else if (e.data?.type === 'MAP_EMBED_ERROR') {
-        console.error('Kefalonia map error:', e.data.error);
-      }
+    });
+    
+    // Clean up on page unload
+    window.addEventListener('unload', function() {
+      clearInterval(pingInterval);
+      clearTimeout(loadTimeout);
     });
   })();
   </script>
@@ -98,4 +144,41 @@ export const parseEmbedParams = (queryString: string): MapEmbedConfig => {
   }
   
   return config;
+};
+
+// New utility for health checking embeds
+export const checkEmbedHealth = (embedId: string): Promise<boolean> => {
+  return new Promise((resolve) => {
+    const iframe = document.getElementById(embedId) as HTMLIFrameElement;
+    
+    if (!iframe || !iframe.contentWindow) {
+      resolve(false);
+      return;
+    }
+    
+    // Set up a listener for the response
+    const messageHandler = (event: MessageEvent) => {
+      if (event.data && event.data.type === 'PONG_EMBED') {
+        window.removeEventListener('message', messageHandler);
+        resolve(true);
+      }
+    };
+    
+    window.addEventListener('message', messageHandler);
+    
+    // Send ping message to iframe
+    try {
+      iframe.contentWindow.postMessage({ type: 'PING_EMBED' }, '*');
+      
+      // Timeout after 5 seconds
+      setTimeout(() => {
+        window.removeEventListener('message', messageHandler);
+        resolve(false);
+      }, 5000);
+    } catch (e) {
+      console.error('Error pinging iframe:', e);
+      window.removeEventListener('message', messageHandler);
+      resolve(false);
+    }
+  });
 };

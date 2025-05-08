@@ -1,16 +1,17 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { generateEmbedCode, MapEmbedConfig } from '@/utils/embed-utils';
+import { generateEmbedCode, MapEmbedConfig, checkEmbedHealth } from '@/utils/embed-utils';
 import EmbeddableMap from '@/components/EmbeddableMap';
-import { MapPin, Copy, Code, Check } from 'lucide-react';
+import { MapPin, Copy, Code, Check, Info, AlertTriangle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const EmbedBuilder: React.FC = () => {
   const [config, setConfig] = useState<MapEmbedConfig>({
@@ -25,9 +26,14 @@ const EmbedBuilder: React.FC = () => {
     pinStyle: "modern"
   });
   const [copied, setCopied] = useState(false);
+  const [testEmbedStatus, setTestEmbedStatus] = useState<'untested' | 'testing' | 'success' | 'failed'>('untested');
   
   const handleConfigChange = (key: keyof MapEmbedConfig, value: any) => {
     setConfig(prev => ({ ...prev, [key]: value }));
+    // Reset embed test status when config changes
+    if (testEmbedStatus !== 'untested') {
+      setTestEmbedStatus('untested');
+    }
   };
   
   const embedCode = generateEmbedCode(config);
@@ -41,6 +47,68 @@ const EmbedBuilder: React.FC = () => {
     });
     setTimeout(() => setCopied(false), 2000);
   };
+  
+  // Test embed functionality by creating a temporary iframe
+  const testEmbedFunctionality = () => {
+    setTestEmbedStatus('testing');
+    
+    // Create a temporary container and iframe
+    const tempContainer = document.createElement('div');
+    tempContainer.style.position = 'absolute';
+    tempContainer.style.left = '-9999px';
+    tempContainer.style.width = '500px';
+    tempContainer.style.height = '500px';
+    
+    const tempIframe = document.createElement('iframe');
+    tempIframe.id = 'test-embed-iframe';
+    tempIframe.src = `${window.location.origin}/embed.html`;
+    tempIframe.width = '100%';
+    tempIframe.height = '100%';
+    
+    tempContainer.appendChild(tempIframe);
+    document.body.appendChild(tempContainer);
+    
+    // Test iframe communication after a short delay
+    setTimeout(async () => {
+      try {
+        const isHealthy = await checkEmbedHealth('test-embed-iframe');
+        
+        if (isHealthy) {
+          setTestEmbedStatus('success');
+          toast({
+            title: "Embed test successful!",
+            description: "The map embed is working correctly.",
+          });
+        } else {
+          setTestEmbedStatus('failed');
+          toast({
+            title: "Embed test failed!",
+            description: "The map embed is not responding properly.",
+            variant: "destructive"
+          });
+        }
+      } catch (error) {
+        setTestEmbedStatus('failed');
+        toast({
+          title: "Embed test failed!",
+          description: "Error testing embed functionality.",
+          variant: "destructive"
+        });
+      } finally {
+        // Clean up
+        document.body.removeChild(tempContainer);
+      }
+    }, 3000);
+  };
+  
+  // Update document title
+  useEffect(() => {
+    document.title = "Kefalonia Map Embed Builder";
+    
+    return () => {
+      document.title = "Kefalonia Explorer";
+    };
+  }, []);
   
   return (
     <div className="container mx-auto py-8">
@@ -221,35 +289,91 @@ const EmbedBuilder: React.FC = () => {
                 
                 <TabsContent value="embed" className="pt-4">
                   <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="embedCode">Embed Code</Label>
-                      <div className="mt-2 relative">
-                        <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm whitespace-pre-wrap break-all">
-                          {embedCode}
-                        </pre>
+                    <Alert variant="default" className="mb-4">
+                      <Info className="h-4 w-4" />
+                      <AlertTitle>Embedding Instructions</AlertTitle>
+                      <AlertDescription>
+                        Copy the code below and paste it into your website's HTML. Make sure your website allows embedding from {window.location.origin}.
+                      </AlertDescription>
+                    </Alert>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="embedCode">Embed Code</Label>
+                        <div className="mt-2 relative">
+                          <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm whitespace-pre-wrap break-all">
+                            {embedCode}
+                          </pre>
+                          <Button 
+                            size="sm" 
+                            variant="secondary" 
+                            className="absolute top-2 right-2"
+                            onClick={copyToClipboard}
+                          >
+                            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      <div className="pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <Button 
-                          size="sm" 
-                          variant="secondary" 
-                          className="absolute top-2 right-2"
+                          className="w-full"
                           onClick={copyToClipboard}
+                          variant="default"
                         >
-                          {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                          <Code className="mr-2 h-4 w-4" />
+                          Copy Embed Code
+                        </Button>
+                        
+                        <Button
+                          className="w-full"
+                          onClick={testEmbedFunctionality}
+                          variant="secondary"
+                          disabled={testEmbedStatus === 'testing'}
+                        >
+                          {testEmbedStatus === 'testing' ? (
+                            <>
+                              <div className="spinner mr-2"></div>
+                              Testing...
+                            </>
+                          ) : testEmbedStatus === 'success' ? (
+                            <>
+                              <Check className="mr-2 h-4 w-4 text-green-500" />
+                              Test Successful
+                            </>
+                          ) : testEmbedStatus === 'failed' ? (
+                            <>
+                              <AlertTriangle className="mr-2 h-4 w-4 text-amber-500" />
+                              Test Failed
+                            </>
+                          ) : (
+                            <>
+                              <Info className="mr-2 h-4 w-4" />
+                              Test Embed
+                            </>
+                          )}
                         </Button>
                       </div>
-                      <p className="mt-2 text-sm text-muted-foreground">
-                        Copy this code and paste it into your website's HTML to display the map.
-                      </p>
-                    </div>
-                    
-                    <div className="pt-4">
-                      <Button 
-                        className="w-full"
-                        onClick={copyToClipboard}
-                        variant="default"
-                      >
-                        <Code className="mr-2 h-4 w-4" />
-                        Copy Embed Code
-                      </Button>
+                      
+                      {testEmbedStatus === 'failed' && (
+                        <Alert variant="destructive">
+                          <AlertTriangle className="h-4 w-4" />
+                          <AlertTitle>Embed Test Failed</AlertTitle>
+                          <AlertDescription>
+                            The embed test failed. This might be due to CORS restrictions or server configuration issues. Make sure your server allows embedding from other domains.
+                          </AlertDescription>
+                        </Alert>
+                      )}
+                      
+                      <div className="mt-4 text-sm text-muted-foreground">
+                        <h3 className="font-medium mb-2">Troubleshooting Tips:</h3>
+                        <ul className="list-disc pl-5 space-y-1">
+                          <li>Make sure CORS is properly configured on your server</li>
+                          <li>If using a CMS, check that it allows external iframes</li>
+                          <li>Ensure the embed code is pasted exactly as provided</li>
+                          <li>For WordPress sites, make sure to paste in the "Text" editor mode, not "Visual"</li>
+                        </ul>
+                      </div>
                     </div>
                   </div>
                 </TabsContent>

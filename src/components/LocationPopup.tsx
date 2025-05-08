@@ -34,6 +34,7 @@ const LocationPopup: React.FC<LocationPopupProps> = ({ location, onClose }) => {
           <button 
             onClick={onClose}
             className="absolute right-2 top-2 z-10 rounded-full bg-white/80 p-1"
+            aria-label="Close details"
           >
             <X className="h-4 w-4" />
           </button>

@@ -22,6 +22,7 @@ const EmbeddableMap: React.FC<EmbeddableMapProps> = ({
   );
   const [mapReady, setMapReady] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
+  const [loadRetries, setLoadRetries] = useState(0);
 
   const {
     height = "500px",
@@ -35,60 +36,112 @@ const EmbeddableMap: React.FC<EmbeddableMapProps> = ({
     pinStyle = "modern"
   } = config;
   
-  // Notify parent when component mounts
+  // Notify parent when component mounts and handle communication
   useEffect(() => {
     if (isEmbedded) {
-      setMapReady(true);
-      try {
-        // Use * for origin to allow embedding on any site
-        window.parent?.postMessage({ type: 'MAP_COMPONENT_MOUNTED' }, '*');
-      } catch (err) {
-        console.error('Error communicating with parent window:', err);
-        setMapError('Failed to communicate with parent window');
-      }
+      const notifyParent = () => {
+        try {
+          // Use * for origin to allow embedding on any site
+          window.parent?.postMessage({ 
+            type: 'MAP_COMPONENT_MOUNTED',
+            timestamp: new Date().toISOString()
+          }, '*');
+          setMapReady(true);
+        } catch (err) {
+          console.error('Error communicating with parent window:', err);
+          setMapError('Failed to communicate with parent window');
+          
+          // Retry a few times
+          if (loadRetries < 3) {
+            setTimeout(() => {
+              setLoadRetries(prev => prev + 1);
+              notifyParent();
+            }, 1000);
+          }
+        }
+      };
+      
+      notifyParent();
+      
+      // Handle parent window health checks
+      const handleParentMessage = (event: MessageEvent) => {
+        if (event.data?.type === 'PING_EMBED') {
+          try {
+            event.source?.postMessage({
+              type: 'PONG_EMBED',
+              timestamp: new Date().toISOString()
+            }, '*');
+            console.log('Responded to health check');
+          } catch (err) {
+            console.error('Error responding to ping:', err);
+          }
+        }
+      };
+      
+      window.addEventListener('message', handleParentMessage);
       
       // Set up error handler for the map
       const handleMapError = (event: ErrorEvent) => {
         console.error('Map error:', event.message);
         setMapError(event.message);
+        
+        try {
+          window.parent?.postMessage({ 
+            type: 'MAP_EMBED_ERROR', 
+            error: event.message,
+            timestamp: new Date().toISOString()
+          }, '*');
+        } catch (err) {
+          console.error('Error sending error message:', err);
+        }
       };
       
       window.addEventListener('error', handleMapError);
       
       return () => {
+        window.removeEventListener('message', handleParentMessage);
         window.removeEventListener('error', handleMapError);
       };
     }
-  }, [isEmbedded]);
+  }, [isEmbedded, loadRetries]);
 
-  // Handle pin selection
+  // Handle pin selection with improved error handling
   const handlePinClick = (id: number) => {
-    setSelectedPinId(id);
-    const location = locations.find(loc => loc.id === id) || null;
-    setSelectedLocation(location);
-    
-    // Notify parent page to prevent scroll when popup is open
-    if (isEmbedded && window.parent) {
-      try {
-        window.parent.postMessage({type: 'preventScroll'}, '*');
-      } catch (err) {
-        console.error('Error sending preventScroll message:', err);
+    try {
+      setSelectedPinId(id);
+      const location = locations.find(loc => loc.id === id) || null;
+      setSelectedLocation(location);
+      
+      // Notify parent page to prevent scroll when popup is open
+      if (isEmbedded && window.parent) {
+        window.parent.postMessage({
+          type: 'MAP_POPUP_OPENED',
+          locationId: id,
+          locationName: location?.name,
+          timestamp: new Date().toISOString()
+        }, '*');
       }
+    } catch (err) {
+      console.error('Error handling pin click:', err);
+      setMapError('Error selecting location');
     }
   };
 
-  // Close popup
+  // Close popup with improved error handling
   const handleClosePopup = () => {
-    setSelectedPinId(null);
-    setSelectedLocation(null);
-    
-    // Allow scrolling again when popup is closed
-    if (isEmbedded && window.parent) {
-      try {
-        window.parent.postMessage({type: 'allowScroll'}, '*');
-      } catch (err) {
-        console.error('Error sending allowScroll message:', err);
+    try {
+      setSelectedPinId(null);
+      setSelectedLocation(null);
+      
+      // Allow scrolling again when popup is closed
+      if (isEmbedded && window.parent) {
+        window.parent.postMessage({
+          type: 'MAP_POPUP_CLOSED',
+          timestamp: new Date().toISOString()
+        }, '*');
       }
+    } catch (err) {
+      console.error('Error closing popup:', err);
     }
   };
 
@@ -104,14 +157,49 @@ const EmbeddableMap: React.FC<EmbeddableMapProps> = ({
         ? prev.filter(c => c !== category)
         : [...prev, category];
     });
+    
+    // Notify parent about category change
+    if (isEmbedded && window.parent) {
+      try {
+        window.parent.postMessage({
+          type: 'MAP_CATEGORY_CHANGED',
+          categories: prev.includes(category)
+            ? prev.filter(c => c !== category)
+            : [...prev, category],
+          timestamp: new Date().toISOString()
+        }, '*');
+      } catch (err) {
+        console.error('Error sending category change message:', err);
+      }
+    }
+  };
+  
+  // Handle map retry if there was an error
+  const handleRetry = () => {
+    setMapError(null);
+    setMapReady(false);
+    setLoadRetries(0);
+    
+    // Force a re-render
+    setTimeout(() => {
+      setMapReady(true);
+    }, 100);
   };
 
   return (
     <div className="kefalonia-map-embed relative" style={{ height, width }}>
       <div className="relative h-full">
         {mapError && (
-          <div className="absolute top-0 left-0 right-0 z-50 bg-red-100 border border-red-400 text-red-700 px-4 py-3 text-sm">
-            Map error: {mapError}
+          <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-red-50 bg-opacity-90 p-4">
+            <p className="text-red-700 text-center mb-4">
+              Map error: {mapError}
+            </p>
+            <button 
+              onClick={handleRetry}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            >
+              Retry
+            </button>
           </div>
         )}
         

@@ -9,9 +9,28 @@
   
   <!-- Allow embedding from any origin -->
   <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin-allow-popups" />
+  <meta http-equiv="Cross-Origin-Embedder-Policy" content="credentialless" />
 
-  <!-- Preload critical resources -->
-  <link rel="stylesheet" href="./embed-assets/leaflet.css" />
+  <!-- Base URL script to handle various hosting scenarios -->
+  <script>
+    // Dynamically determine base URL for assets
+    window.EMBED_BASE_URL = (function() {
+      // Get the current script's URL to extract the base path
+      var scripts = document.getElementsByTagName('script');
+      var currentScript = scripts[scripts.length - 1].src;
+      var baseUrl = currentScript.substring(0, currentScript.lastIndexOf('/'));
+      // Go up one directory level from script location
+      return baseUrl.substring(0, baseUrl.lastIndexOf('/') + 1);
+    })();
+  </script>
+  
+  <!-- Preload critical resources with dynamic base URL -->
+  <link rel="stylesheet" href="" id="leaflet-css" />
+  
+  <script>
+    // Set dynamic path for stylesheet
+    document.getElementById('leaflet-css').href = window.EMBED_BASE_URL + 'embed-assets/leaflet.css';
+  </script>
   
   <style>
     /* Essential embed styles */
@@ -45,6 +64,27 @@
       margin-right: 10px;
       animation: spin 1s linear infinite;
     }
+    .map-error {
+      padding: 20px;
+      text-align: center;
+      background: #fff0f0;
+      color: #e10000;
+      font-family: sans-serif;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .map-retry-btn {
+      margin-top: 15px;
+      padding: 8px 16px;
+      background: #4A6FA5;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
@@ -59,8 +99,38 @@
     </div>
   </div>
   
-  <!-- Embed specific bundle -->
-  <script type="module" src="./embed-assets/embed.js"></script>
+  <!-- Embed specific bundle with dynamic path -->
+  <script>
+    // Function to load the main script
+    function loadMainScript() {
+      var script = document.createElement('script');
+      script.type = 'module';
+      script.src = window.EMBED_BASE_URL + 'embed-assets/embed.js';
+      script.onerror = function() {
+        showErrorMessage('Failed to load map resources. Please try again later.');
+      };
+      document.body.appendChild(script);
+    }
+    
+    // Show error with retry option
+    function showErrorMessage(message) {
+      var root = document.getElementById('embed-root');
+      root.innerHTML = '<div class="map-error">' +
+        '<p>' + message + '</p>' +
+        '<button class="map-retry-btn" onclick="location.reload()">Retry Loading</button>' +
+        '</div>';
+    }
+    
+    // Attempt to load the main script
+    loadMainScript();
+    
+    // Set timeout for loading failure
+    setTimeout(function() {
+      if (document.querySelector('.map-loading')) {
+        showErrorMessage('Map is taking too long to load. Please check your connection and try again.');
+      }
+    }, 15000);
+  </script>
   
   <!-- Error handling -->
   <script>
@@ -69,15 +139,12 @@
       try {
         window.parent.postMessage({ 
           type: 'MAP_EMBED_ERROR', 
-          error: event.message 
+          error: event.message,
+          timestamp: new Date().toISOString()
         }, '*');
         
         // Show error UI
-        document.getElementById('embed-root').innerHTML = 
-          '<div style="padding: 20px; text-align: center;">' +
-          '<p>Sorry, there was an error loading the map.</p>' +
-          '<p>Please refresh or try again later.</p>' +
-          '</div>';
+        showErrorMessage('Error loading map: ' + event.message);
       } catch (e) {
         console.error('Failed to handle error:', e);
       }
@@ -86,9 +153,27 @@
     // Let parent know iframe is loaded
     window.addEventListener('load', function() {
       try {
-        window.parent.postMessage({ type: 'MAP_EMBED_LOADED' }, '*');
+        window.parent.postMessage({ 
+          type: 'MAP_EMBED_LOADED',
+          timestamp: new Date().toISOString()
+        }, '*');
+        console.log('Map embed initial load complete');
       } catch (e) {
         console.error('Failed to send loaded message:', e);
+      }
+    });
+    
+    // Respond to ping requests from parent
+    window.addEventListener('message', function(event) {
+      if (event.data && event.data.type === 'PING_EMBED') {
+        try {
+          event.source.postMessage({
+            type: 'PONG_EMBED',
+            timestamp: new Date().toISOString()
+          }, '*');
+        } catch (e) {
+          console.error('Failed to respond to ping:', e);
+        }
       }
     });
   </script>
